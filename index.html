@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — Smart Task Manager</title>
+  <meta name="description" content="A modern Firebase-powered task management dashboard." />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+            },
+            accent: '#06b6d4',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Feather Icons -->
+  <script src="https://unpkg.com/feather-icons@4.29.0/dist/feather.min.js"></script>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     TOAST CONTAINER
+════════════════════════════════════════════════════════ -->
+<div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ════════════════════════════════════════════════════════
+     AUTH SECTION  (shown when logged out)
+════════════════════════════════════════════════════════ -->
+<div id="auth-container">
+  <!-- ─── Login Card ─── -->
+  <div id="login-card" class="auth-card">
+    <!-- Brand -->
+    <div class="flex items-center gap-2.5 mb-8">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#6366f1,#06b6d4)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <span class="text-xl font-bold text-white">TaskFlow</span>
+    </div>
+
+    <h1 class="text-2xl font-bold text-white mb-1">Welcome back</h1>
+    <p class="text-sm text-slate-400 mb-7">Sign in to your workspace</p>
+
+    <form id="login-form" novalidate>
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
+        <input id="login-email" type="email" class="input-field" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="mb-2">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+        <div class="relative">
+          <input id="login-password" type="password" class="input-field pr-10" placeholder="••••••••" required autocomplete="current-password" />
+          <button type="button" id="toggle-login-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors" tabindex="-1" aria-label="Toggle password visibility">
+            <i data-feather="eye" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <p id="login-error" class="text-sm text-red-400 mb-4 hidden"></p>
+
+      <button id="login-btn" type="submit" class="btn btn-primary w-full mt-2">
+        <span id="login-btn-text">Sign in</span>
+        <span id="login-spinner" class="spinner hidden"></span>
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400 mt-6">
+      No account?
+      <button id="go-signup" class="text-brand-400 font-semibold hover:text-brand-300 transition-colors ml-1">Create one →</button>
+    </p>
+  </div>
+
+  <!-- ─── Sign Up Card ─── -->
+  <div id="signup-card" class="auth-card hidden">
+    <div class="flex items-center gap-2.5 mb-8">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#6366f1,#06b6d4)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <span class="text-xl font-bold text-white">TaskFlow</span>
+    </div>
+
+    <h1 class="text-2xl font-bold text-white mb-1">Create account</h1>
+    <p class="text-sm text-slate-400 mb-7">Start managing tasks in seconds</p>
+
+    <form id="signup-form" novalidate>
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Full name</label>
+        <input id="signup-name" type="text" class="input-field" placeholder="Godfred Asante" required autocomplete="name" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Email</label>
+        <input id="signup-email" type="email" class="input-field" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="mb-1">
+        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+        <div class="relative">
+          <input id="signup-password" type="password" class="input-field pr-10" placeholder="Min. 8 characters" required autocomplete="new-password" />
+          <button type="button" id="toggle-signup-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors" tabindex="-1" aria-label="Toggle password visibility">
+            <i data-feather="eye" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Password strength meter -->
+      <div class="progress-bar mb-1 mt-2">
+        <div id="pw-strength" class="progress-fill w-0"></div>
+      </div>
+      <p id="pw-strength-label" class="text-xs text-slate-500 mb-4">&nbsp;</p>
+
+      <p id="signup-error" class="text-sm text-red-400 mb-4 hidden"></p>
+
+      <button id="signup-btn" type="submit" class="btn btn-primary w-full">
+        <span id="signup-btn-text">Create account</span>
+        <span id="signup-spinner" class="spinner hidden"></span>
+      </button>
+    </form>
+
+    <p class="text-center text-sm text-slate-400 mt-6">
+      Already have an account?
+      <button id="go-login" class="text-brand-400 font-semibold hover:text-brand-300 transition-colors ml-1">Sign in →</button>
+    </p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     DASHBOARD SECTION  (shown when logged in)
+════════════════════════════════════════════════════════ -->
+<div id="app-container" class="flex min-h-screen">
+
+  <!-- Mobile overlay -->
+  <div id="sidebar-overlay"></div>
+
+  <!-- ─── Sidebar ─── -->
+  <nav id="sidebar" class="flex flex-col h-screen sticky top-0 overflow-y-auto">
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5 px-5 py-5 border-b border-slate-100 dark:border-slate-800">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#6366f1,#06b6d4)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <span class="font-bold text-lg text-slate-800 dark:text-slate-100">TaskFlow</span>
+    </div>
+
+    <!-- Nav -->
+    <div class="flex-1 p-3 space-y-1">
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 py-2">Workspace</p>
+
+      <div class="nav-item active" data-view="dashboard">
+        <i data-feather="grid" class="w-4 h-4 flex-shrink-0"></i>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-view="tasks">
+        <i data-feather="check-square" class="w-4 h-4 flex-shrink-0"></i>
+        <span>My Tasks</span>
+        <span id="sidebar-task-count" class="ml-auto text-xs bg-brand-500 text-white rounded-full px-2 py-0.5 font-semibold hidden"></span>
+      </div>
+      <div class="nav-item" data-view="profile">
+        <i data-feather="user" class="w-4 h-4 flex-shrink-0"></i>
+        <span>Profile</span>
+      </div>
+    </div>
+
+    <!-- Bottom: user + logout -->
+    <div class="p-3 border-t border-slate-100 dark:border-slate-800">
+      <!-- Dark mode toggle -->
+      <button id="dark-toggle" class="nav-item w-full mb-2">
+        <i data-feather="moon" class="w-4 h-4 flex-shrink-0"></i>
+        <span id="dark-toggle-label">Dark mode</span>
+      </button>
+
+      <div class="flex items-center gap-3 px-3 py-2">
+        <div id="sidebar-avatar" class="avatar text-xs"></div>
+        <div class="flex-1 min-w-0">
+          <p id="sidebar-name" class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate"></p>
+          <p id="sidebar-email" class="text-xs text-slate-400 truncate"></p>
+        </div>
+        <button id="logout-btn" class="text-slate-400 hover:text-red-500 transition-colors" title="Sign out">
+          <i data-feather="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── Main content ─── -->
+  <div id="main-content" class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- Top bar -->
+    <header class="flex items-center gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-gray-900 sticky top-0 z-20">
+      <button id="sidebar-toggle" class="md:hidden text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+        <i data-feather="menu" class="w-5 h-5"></i>
+      </button>
+      <h2 id="page-title" class="text-lg font-bold text-slate-800 dark:text-slate-100 flex-1">Dashboard</h2>
+
+      <!-- Search (Tasks view only) -->
+      <div id="search-bar" class="hidden relative max-w-xs w-full">
+        <i data-feather="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+        <input id="search-input" type="text" placeholder="Search tasks…" class="input-field pl-9 py-2 text-sm" />
+      </div>
+
+      <button id="add-task-btn" class="btn btn-primary hidden text-sm">
+        <i data-feather="plus" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">New task</span>
+      </button>
+    </header>
+
+    <!-- ─── View: Dashboard ─── -->
+    <section id="view-dashboard" class="flex-1 overflow-y-auto p-6 space-y-6">
+
+      <!-- Welcome -->
+      <div>
+        <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          Good day, <span id="welcome-name" class="gradient-text"></span> 👋
+        </h3>
+        <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">Here's what's happening with your tasks today.</p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card p-5">
+          <div class="flex items-start justify-between mb-4">
+            <div class="stat-icon bg-indigo-50 dark:bg-indigo-900/30">
+              <i data-feather="list" class="w-5 h-5 text-brand-500"></i>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">Total</span>
+          </div>
+          <p id="stat-total" class="text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">All tasks</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-start justify-between mb-4">
+            <div class="stat-icon bg-yellow-50 dark:bg-yellow-900/30">
+              <i data-feather="clock" class="w-5 h-5 text-yellow-500"></i>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">Active</span>
+          </div>
+          <p id="stat-pending" class="text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">In progress</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-start justify-between mb-4">
+            <div class="stat-icon bg-green-50 dark:bg-green-900/30">
+              <i data-feather="check-circle" class="w-5 h-5 text-green-500"></i>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">Done</span>
+          </div>
+          <p id="stat-done" class="text-3xl font-bold text-slate-800 dark:text-slate-100">0</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Completed</p>
+        </div>
+        <div class="card p-5">
+          <div class="flex items-start justify-between mb-4">
+            <div class="stat-icon bg-cyan-50 dark:bg-cyan-900/30">
+              <i data-feather="trending-up" class="w-5 h-5 text-accent"></i>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">Rate</span>
+          </div>
+          <p id="stat-rate" class="text-3xl font-bold text-slate-800 dark:text-slate-100">0%</p>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Completion</p>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <p class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Overall Progress</p>
+          <p id="progress-label" class="text-sm font-semibold text-brand-500">0%</p>
+        </div>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Recent tasks preview -->
+      <div class="card overflow-hidden">
+        <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+          <p class="font-semibold text-slate-700 dark:text-slate-200">Recent Tasks</p>
+          <button data-view="tasks" class="nav-switch text-sm text-brand-500 font-medium hover:underline">View all →</button>
+        </div>
+        <div id="recent-tasks-list" class="divide-y divide-slate-50 dark:divide-slate-800"></div>
+      </div>
+    </section>
+
+    <!-- ─── View: My Tasks ─── -->
+    <section id="view-tasks" class="flex-1 overflow-y-auto p-6 hidden">
+      <!-- Filter tabs -->
+      <div class="flex gap-2 mb-5 flex-wrap">
+        <button class="filter-btn btn btn-sm btn-primary" data-filter="all">All</button>
+        <button class="filter-btn btn btn-sm btn-ghost" data-filter="pending">Pending</button>
+        <button class="filter-btn btn btn-sm btn-ghost" data-filter="in-progress">In Progress</button>
+        <button class="filter-btn btn btn-sm btn-ghost" data-filter="done">Done</button>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div id="tasks-loading" class="empty-state">
+          <div class="spinner spinner-dark"></div>
+        </div>
+        <div id="tasks-empty" class="empty-state hidden">
+          <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-2">
+            <i data-feather="inbox" class="w-7 h-7 text-slate-400"></i>
+          </div>
+          <p class="font-semibold text-slate-600 dark:text-slate-300">No tasks yet</p>
+          <p class="text-sm text-slate-400">Click <strong>New task</strong> to get started.</p>
+        </div>
+        <div id="tasks-table-wrapper" class="hidden overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasks-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── View: Profile ─── -->
+    <section id="view-profile" class="flex-1 overflow-y-auto p-6 hidden">
+      <div class="max-w-xl space-y-5">
+        <div class="card p-6">
+          <div class="flex items-center gap-5 mb-6">
+            <div id="profile-avatar" class="avatar w-16 h-16 text-xl"></div>
+            <div>
+              <p id="profile-name-display" class="text-xl font-bold text-slate-800 dark:text-slate-100"></p>
+              <p id="profile-email-display" class="text-sm text-slate-400"></p>
+              <p class="text-xs text-slate-400 mt-1">Member since <span id="profile-joined"></span></p>
+            </div>
+          </div>
+
+          <form id="profile-form" novalidate>
+            <div class="mb-4">
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Display name</label>
+              <input id="profile-name-input" type="text" class="input-field" placeholder="Your name" required />
+            </div>
+            <p id="profile-error" class="text-sm text-red-400 mb-3 hidden"></p>
+            <button id="profile-save-btn" type="submit" class="btn btn-primary text-sm">
+              <span id="profile-save-text">Save changes</span>
+              <span id="profile-save-spinner" class="spinner hidden"></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Password change -->
+        <div class="card p-6">
+          <h4 class="font-semibold text-slate-700 dark:text-slate-200 mb-4">Change password</h4>
+          <form id="password-form" novalidate>
+            <div class="mb-4">
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">New password</label>
+              <input id="new-password" type="password" class="input-field" placeholder="Min. 8 characters" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Confirm password</label>
+              <input id="confirm-password" type="password" class="input-field" placeholder="Repeat new password" />
+            </div>
+            <p id="pw-change-error" class="text-sm text-red-400 mb-3 hidden"></p>
+            <button id="pw-change-btn" type="submit" class="btn btn-ghost text-sm">Update password</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div><!-- /main-content -->
+</div><!-- /app-container -->
+
+<!-- ════════════════════════════════════════════════════════
+     MODAL — Add / Edit Task
+════════════════════════════════════════════════════════ -->
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 id="modal-title" class="text-xl font-bold text-slate-800 dark:text-slate-100">New task</h3>
+      <button id="modal-close" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+        <i data-feather="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <form id="task-form" novalidate>
+      <input type="hidden" id="task-id" />
+
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Task name *</label>
+        <input id="task-title" type="text" class="input-field" placeholder="e.g. Review quarterly report" required maxlength="120" />
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Description</label>
+        <textarea id="task-desc" class="input-field resize-none" rows="3" placeholder="Optional details…" maxlength="500"></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Priority</label>
+          <select id="task-priority" class="input-field">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
+          <select id="task-status" class="input-field">
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Due date</label>
+        <input id="task-due" type="date" class="input-field" />
+      </div>
+
+      <p id="task-form-error" class="text-sm text-red-400 mb-4 hidden"></p>
+
+      <div class="flex gap-3 justify-end">
+        <button type="button" id="modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" id="task-submit-btn" class="btn btn-primary">
+          <span id="task-submit-text">Create task</span>
+          <span id="task-submit-spinner" class="spinner hidden"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- App entry point (ES module) -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
